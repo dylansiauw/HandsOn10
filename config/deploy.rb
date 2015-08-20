@@ -94,6 +94,8 @@ task :deploy => :environment do
     to :launch do
       queue "touch #{deploy_to}/tmp/restart.txt"
     end
+    
+    invoke :restart
   end
 end
 
