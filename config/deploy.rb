@@ -4,7 +4,7 @@ require 'mina/git'
 require 'mina/rbenv'  # for rbenv support. (http://rbenv.org)
 
 set :domain, '128.199.78.153'
-set :deploy_to, '/home/ubuntu/app_deploy'
+set :deploy_to, '/root/CSH/HandsOn10'
 set :repository, 'https://github.com/dylansiauw/HandsOn10'
 set :branch, 'master'
 set :term_mode, nil
@@ -85,10 +85,11 @@ task :deploy => :environment do
     # instance of your project.
     invoke :'git:clone'
     invoke :'bundle:install'
+
+    invoke :'deploy:link_shared_paths'
     invoke :'rails:db_create'
     invoke :'rails:db_migrate'
     invoke :'rails:assets_precompile'
-    invoke :'deploy:link_shared_paths'
 
     to :launch do
       queue "touch #{deploy_to}/tmp/restart.txt"
@@ -115,7 +116,7 @@ task :restart => :environment do
   # queue %[kill -s SIGUSR2 `cat #{deploy_to}/tmp/server.pid`]
   queue %[kill -9 $(cat #{deploy_to}/tmp/server.pid)]
   queue %[cd #{deploy_to}/current]
-  queue %[rails server puma -d -b 0.0.0.0 -e production --pid #{deploy_to}/tmp/server.pid]
+  queue %[rails server -d -b 0.0.0.0 -e production --pid #{deploy_to}/tmp/server.pid]
 
   # when starting the server, produces process ID and saves it to tmp/server.pid
 
@@ -124,13 +125,13 @@ task :restart => :environment do
 end
 
 # restarts rails server, redis, and sidekiq
-task :restart => :environment do
-  #stop rails
-  puts "- stop existing rails" if queue "kill -9 $(cat #{deploy_to}/tmp/server.pid)"
-  #start rails
-  puts "- change directory" if queue "cd #{deploy_to}/current"
-  puts "- start new rails" if queue "rails s -e production --pid #{deploy_to}/tmp/server.pid -d"
-end
+# task :restart => :environment do
+#   #stop rails
+#   puts "- stop existing rails" if queue "kill -9 $(cat #{deploy_to}/tmp/server.pid)"
+#   #start rails
+#   puts "- change directory" if queue "cd #{deploy_to}/current"
+#   puts "- start new rails" if queue "rails s -e production --pid #{deploy_to}/tmp/server.pid -d"
+# end
 
 task :logs do
   queue 'tail -f /var/log/nginx/error.log'
